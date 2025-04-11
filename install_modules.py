@@ -39,7 +39,7 @@ Error: {e}
         print(success_msg)
 
 # List of modules to be installed
-modules_list = ["tkinter", "time", "pyperclip", "google.generativeai"]
+modules_list = ["tkinter", "time", "pyperclip", "google.generativeai", "pyautogui"]
 
 # Install the modules
 install_modules(modules_list)
