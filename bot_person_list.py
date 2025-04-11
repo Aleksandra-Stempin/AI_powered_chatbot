@@ -15,7 +15,7 @@ person_list = [
     , "Sybill Trelawney"
     , "Dobby"
     , "Offended teenager"
-    , "Care Bear"  # 11
+    , "Care Bear"
     , "Winnie-the-Pooh"
     , "Geralt z Rivii"
     , "Gandalf"

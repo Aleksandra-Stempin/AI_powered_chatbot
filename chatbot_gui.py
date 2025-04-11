@@ -1,15 +1,18 @@
+import random
 import tkinter
+from tkinter import messagebox
+import time
 import pyperclip
 import google.generativeai as genai
+import textwrap
+from my_api_key_file import my_google_api_key
+# from colorama import Style, Fore, Back
 from bot_person_list import person_list, person_list_for_gui, no_specified_bot_role
 from tkinter import *
 import tkinter.font as tkFont
-
-from my_api_key_file import my_google_api_key
-
+import pyautogui
 
 chat_history_to_print = []
-# copy here your google_api_key and comment line 8
 my_api_key = my_google_api_key
 genai.configure(api_key=my_api_key)
 geminiModel=genai.GenerativeModel("gemini-1.5-flash")
@@ -118,9 +121,13 @@ def count_speaking_person_in_bots_ans(bot_ans, speaking_person):
     speaking_person = str(speaking_person).strip()
     speaking_person_upper = speaking_person.upper()
     count = bot_ans.count(speaking_person)
+    # count_1 = bot_ans.count(speaking_person)
+    # count_2 = bot_ans.count(speaking_person_upper)
+    # count = count_1 + count_2
     return count
 def get_answer_from_AI(initial_feed_for_AI):
     global speaking_person
+    # global chat_history_to_display
 
     speaking_person_str = speaking_person.get()
     speaking_persons_list = [default_chatbot_name,  no_specified_bot_role]
@@ -128,7 +135,7 @@ def get_answer_from_AI(initial_feed_for_AI):
         speaking_person_str = default_chatbot_name
     len_speaking_person = len(speaking_person_str)
     chat_history_str = chat_history.get()
-
+    from my_api_key_file import my_google_api_key
 
     output_text = ""
     genai.configure(api_key=my_google_api_key)
@@ -148,10 +155,13 @@ def get_answer_from_AI(initial_feed_for_AI):
         generation_config=generation_config,
         stream=False,
     )
+    # checks if answers contains speaking person
+    # print("len_speaking_person", len_speaking_person)
     speaking_person_str_upper_case = speaking_person_str.upper()
     speaking_person_str_upper_case = speaking_person_str_upper_case.strip()
     speaking_person_bot_answer_beginning = f'{speaking_person_str_upper_case}: '
     len_speaking_person_bot_answer_beginning = len(speaking_person_bot_answer_beginning)
+    # print("len_speaking_person_bot_answer_beginning", len_speaking_person_bot_answer_beginning)
     bot_ans = str(responses.text)
     bot_ans = bot_ans.strip()
     bot_ans_beginning = bot_ans[0:len_speaking_person_bot_answer_beginning]
@@ -238,6 +248,9 @@ See you soon.
     root.after(1000, lambda: main_chat_lbl.config(textvariable=chat_history))
 
 
+    # print("\nchat_history_to_display:", chat_history_to_display.get())
+    # print('chat_history_to_display.get()==goodbye_message', chat_history_to_display.get() == goodbye_message)
+
     # Reset UI elements
     speaking_person.set(no_specified_bot_role)
     chosen_bot_person.set(no_specified_bot_role)
@@ -292,14 +305,51 @@ def on_enter(e):
     if (e.widget['state']==tkinter.NORMAL):
         e.widget['background'] = button_color_on_focus
 def on_leave(e):
-    e.widget['background'] = button_color
+    widget_class = str(e.widget.winfo_class())
+    if widget_class == "Menubutton":
+        e.widget['background'] = main_window_color
+    else:
+        e.widget['background'] = button_color
+
+# def focus_on_next_element(event):
+#     if (event.widget['state']==tkinter.NORMAL):
+#         event.widget.tk_focusNext().focus()
+#         return "break"
 
 def focus_on_next_element(event):
-    if (event.widget['state']==tkinter.NORMAL):
-        event.widget.tk_focusNext().focus()
+    global current_focus_index
+    current_widget = event.widget
+
+    try:
+        current_focus_index = widgets.index(current_widget)
+    except ValueError:
+        # Widget nie znajduje się na naszej liście, nic nie rób
+        return "break"
+
+    next_index = (current_focus_index + 1) % len(widgets)
+    next_widget = widgets[next_index]
+
+    # Szukaj następnego aktywnego widgetu
+    while next_widget['state'] != tkinter.NORMAL:
+        next_index = (next_index + 1) % len(widgets)
+        if next_index == current_focus_index:
+            # Wszystkie widgety są nieaktywne, przerwij
+            return "break"
+        next_widget = widgets[next_index]
+
+    next_widget.focus_set()
+    current_focus_index = next_index # Aktualizuj globalny indeks
     return "break"
 
-
+def open_bot_person_dropdown(event):
+    """Symuluje kliknięcie lewym przyciskiem myszy na widget."""
+    try:
+        x, y = event.widget.winfo_rootx() + 5, event.widget.winfo_rooty() + 5 # Dodajemy mały offset
+        pyautogui.click(x=x, y=y)
+    except Exception as e:
+        print(f"Wystąpił błąd podczas symulacji kliknięcia: {e}")
+    return "break"
+    return "break"
 
 def update_wraplength(e):
     # Set the wraplength to the current width of the root window
@@ -455,6 +505,10 @@ new_chat_button.config(state=tkinter.NORMAL)
 
 
 # Bind the enter and leave events to the buttons
+
+bot_person_dropdown.bind("<Enter>", on_enter)
+bot_person_dropdown.bind("<Leave>", on_leave)
+
 send_question_button.bind("<Enter>", on_enter)
 send_question_button.bind("<Leave>", on_leave)
 
@@ -467,6 +521,10 @@ copy_chat_button.bind("<Leave>", on_leave)
 new_chat_button.bind("<Enter>", on_enter)
 new_chat_button.bind("<Leave>", on_leave)
 
+
+# bind enter to bot_person_dropdown
+bot_person_dropdown.bind("<Return>", open_bot_person_dropdown)
+
 # Bind the Tab key to move focus to the next widget
 widgets = [bot_person_dropdown, question_entry, send_question_button, end_chat_button, copy_chat_button, new_chat_button]
 
@@ -474,12 +532,13 @@ for widget in widgets:
     widget.bind("<Tab>", focus_on_next_element)
 
 # Bind focus in and focus out events to change button colors
-buttons = [send_question_button, end_chat_button, copy_chat_button, new_chat_button]
+buttons = [bot_person_dropdown, send_question_button, end_chat_button, copy_chat_button, new_chat_button]
 for button in buttons:
     button.bind("<FocusIn>",on_enter)
     button.bind("<FocusOut>", on_leave)
 
-for button in buttons:
+buttons_2 = [send_question_button, end_chat_button, copy_chat_button, new_chat_button]
+for button in buttons_2:
     button.bind('<Return>', lambda event, btn=button: btn.invoke())
 
 def run_chat():
