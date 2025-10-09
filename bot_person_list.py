@@ -39,7 +39,7 @@ person_list = [
     , "King Louis XIV"
     , "XIX Century English Lord"
     , "King George III"
-    , "Ling Henry VIII"
+    , "King Henry VIII"
     , "Alexander Hamilton"
     # , "Elsa"
 ]
