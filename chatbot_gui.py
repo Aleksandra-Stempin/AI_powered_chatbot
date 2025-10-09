@@ -11,11 +11,11 @@ from bot_person_list import person_list, person_list_for_gui, no_specified_bot_r
 from tkinter import *
 import tkinter.font as tkFont
 import pyautogui
-
+AI_model = "gemini-2.0-flash"
 chat_history_to_print = []
 my_api_key = my_google_api_key
 genai.configure(api_key=my_api_key)
-geminiModel=genai.GenerativeModel("gemini-1.5-flash")
+geminiModel=genai.GenerativeModel(AI_model)
 chat = geminiModel.start_chat(history=[])
 chat_history_str_question = ""
 bot_person_list =person_list_for_gui
@@ -140,7 +140,7 @@ def get_answer_from_AI(initial_feed_for_AI):
     output_text = ""
     genai.configure(api_key=my_google_api_key)
 
-    model = genai.GenerativeModel('gemini-1.5-flash-002')
+    model = genai.GenerativeModel(AI_model)
     generation_config = genai.GenerationConfig(
         stop_sequences=None,
         temperature=0.7,
