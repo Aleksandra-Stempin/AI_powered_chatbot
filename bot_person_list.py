@@ -17,7 +17,7 @@ person_list = [
     , "Offended teenager"
     , "Care Bear"
     # , "Winnie-the-Pooh"
-    # , "Geralt z Rivii"
+    , "Geralt z Rivii"
     # , "Gandalf"
     # , "Miku Hatsune"
     # , "Yennifer"
