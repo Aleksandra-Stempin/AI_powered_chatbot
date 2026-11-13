@@ -3,7 +3,9 @@ import tkinter
 from tkinter import messagebox
 import time
 import pyperclip
-import google.generativeai as genai
+# import google.generativeai as genai
+import google.genai as genai
+from google.genai import types
 import textwrap
 from my_api_key_file import my_google_api_key
 # from colorama import Style, Fore, Back
@@ -11,12 +13,11 @@ from bot_person_list import person_list, person_list_for_gui, no_specified_bot_r
 from tkinter import *
 import tkinter.font as tkFont
 import pyautogui
-AI_model = "gemini-2.0-flash"
+AI_model = "gemini-2.5-flash"
 chat_history_to_print = []
 my_api_key = my_google_api_key
-genai.configure(api_key=my_api_key)
-geminiModel=genai.GenerativeModel(AI_model)
-chat = geminiModel.start_chat(history=[])
+client = genai.Client(api_key=my_api_key)
+chat = client.chats.create(model=AI_model)
 chat_history_str_question = ""
 bot_person_list =person_list_for_gui
 default_text_for_chat_title_lbl = f"You are chatting with general chatbot."
@@ -138,31 +139,26 @@ def get_answer_from_AI(initial_feed_for_AI):
     from my_api_key_file import my_google_api_key
 
     output_text = ""
-    genai.configure(api_key=my_google_api_key)
-
-    model = genai.GenerativeModel(AI_model)
-    generation_config = genai.GenerationConfig(
+    # genai.configure(api_key=my_google_api_key)
+    client = genai.Client(api_key=my_google_api_key)
+    generation_config = types.GenerateContentConfig(
         stop_sequences=None,
         temperature=0.7,
         top_p=1.0,
         top_k=32,
-        candidate_count=1,
-        max_output_tokens= 500
+        max_output_tokens=1500,
     )
 
-    responses = model.generate_content(
-        contents=initial_feed_for_AI,
-        generation_config=generation_config,
-        stream=False,
+    response = client.models.generate_content(
+        model=AI_model, contents=initial_feed_for_AI, config=generation_config
     )
-    # checks if answers contains speaking person
-    # print("len_speaking_person", len_speaking_person)
+
     speaking_person_str_upper_case = speaking_person_str.upper()
     speaking_person_str_upper_case = speaking_person_str_upper_case.strip()
     speaking_person_bot_answer_beginning = f'{speaking_person_str_upper_case}: '
     len_speaking_person_bot_answer_beginning = len(speaking_person_bot_answer_beginning)
-    # print("len_speaking_person_bot_answer_beginning", len_speaking_person_bot_answer_beginning)
-    bot_ans = str(responses.text)
+
+    bot_ans = str(response.text)
     bot_ans = bot_ans.strip()
     bot_ans_beginning = bot_ans[0:len_speaking_person_bot_answer_beginning]
     speaking_person_in_bot_answer = (bot_ans_beginning.strip()).title() == (speaking_person_bot_answer_beginning.strip()).title()
@@ -194,10 +190,11 @@ def get_answer_from_AI(initial_feed_for_AI):
 """
     chat_history.set(chat_history_str)
 
-    for response in responses:
-        if len(response.text) > 0:
-            output_text = output_text + response.text + "\n"
-            output_text = str(output_text)
+    output_text = ""
+
+    if response.text:
+        output_text = response.text
+
     return output_text
 
 
